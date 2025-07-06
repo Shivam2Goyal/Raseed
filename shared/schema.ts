@@ -72,7 +72,7 @@ export const extractedReceiptDataSchema = z.object({
   ),
   total_amount: z.number().nullable(),
   tax_amount: z.number().nullable(),
-  subtotal: z.number().nullable().optional(),
+  subtotal: z.number().nullable(),
   line_items: z.array(z.object({
     description: z.string(),
     quantity: z.number(),

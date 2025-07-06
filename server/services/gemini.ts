@@ -201,6 +201,20 @@ Important guidelines:
 
       if (rawJson) {
         const parsedData = JSON.parse(rawJson);
+        
+        // Calculate subtotal if not provided by AI
+        if (!parsedData.subtotal && parsedData.total_amount !== null && parsedData.tax_amount !== null) {
+          parsedData.subtotal = parsedData.total_amount - parsedData.tax_amount;
+        } else if (!parsedData.subtotal && parsedData.line_items && parsedData.line_items.length > 0) {
+          // Calculate from line items if available
+          parsedData.subtotal = parsedData.line_items.reduce((sum: number, item: any) => 
+            sum + (item.price * item.quantity), 0
+          );
+        } else if (!parsedData.subtotal) {
+          // Default to 0 if cannot calculate
+          parsedData.subtotal = 0;
+        }
+        
         const validatedData = extractedReceiptDataSchema.parse(parsedData);
         return validatedData;
       } else {
