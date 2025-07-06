@@ -1,0 +1,113 @@
+High-Level Approach: Phased Development
+You can't build everything at once. We'll approach this in phases, starting with a Minimum Viable Product (MVP) and progressively adding the more complex AI features. This ensures you have a working core product early and can build upon it.
+Phase 1: The Core Pipeline - Receipt to Wallet Pass. Get the fundamental functionality working: take a photo, extract data, create a basic pass.
+Phase 2: Data & Intelligence. Store the extracted data and build the basic analysis and query capabilities.
+Phase 3: The Conversational Agent. Integrate Vertex AI Agent Builder to create the natural language assistant.
+Phase 4: Proactive Insights & Polish. Implement the dynamic, proactive savings suggestions and refine the user experience with notifications.
+The Roadmap: Building Project Raseed
+Phase 1: The Core Pipeline (MVP)
+The goal here is to prove the main concept: a user can take a photo of a receipt and get a Google Wallet pass representing that purchase.
+1. Setup Your Google Cloud Environment:
+Create a new Google Cloud Project.
+Enable the required APIs:
+Vertex AI API (for Gemini)
+Google Wallet API
+Cloud Functions API
+Cloud Run API (as an alternative to Functions)
+Firestore API
+2. Frontend - The "App":
+What to build: A simple mobile app (use Flutter or React Native for cross-platform) with one primary function: a button that opens the camera.
+Action: The user takes a picture of a receipt. The app then sends this image data (as base64 or via a signed URL to Cloud Storage) to your backend.
+3. Backend - The Brains (Part 1):
+What to build: An HTTP-triggered Cloud Function. This function will be the entry point for your entire backend logic.
+Tech Stack Focus: Cloud Functions, Gemini Pro Vision API.
+Action Steps:
+The Cloud Function receives the image from the mobile app.
+It calls the Gemini 1.5 Pro (or Gemini Pro Vision) model via the Vertex AI SDK.
+Crucial Step: The Prompt. Your prompt to Gemini is key to success. It should be very specific:
+Generated prompt
+Analyze this image of a receipt. Extract the following information in a structured JSON format:
+- store_name: string
+- transaction_date: string (in YYYY-MM-DD format)
+- total_amount: float
+- tax_amount: float
+- line_items: array of objects, where each object has:
+  - description: string
+  - quantity: integer
+  - price: float
+If you cannot determine a value, use null.
+Use code with caution.
+Prompt
+The function receives the structured JSON response from Gemini.
+4. Backend - The Wallet Integration (Part 1):
+What to build: Logic within the same Cloud Function to communicate with the Google Wallet API.
+Tech Stack Focus: Google Wallet API, your chosen backend language (Python, Node.js).
+Action Steps:
+Set up Wallet API access: Create a Google Wallet Issuer account and configure your service account credentials.
+Create a Pass "Class": Define a template for your receipts. This is done once. A Generic pass type is suitable. You'll define placeholders like storeName, totalAmount, and text modules for the line items.
+Create a Pass "Object": Use the JSON data from Gemini to populate an instance of your Pass Class. The line_items will go into the textModulesData on the back of the pass (the "details" view). You can add a link back to your app/future web portal here.
+The Wallet API returns a signed JWT. This is the "Add to Google Wallet" button link.
+Your Cloud Function sends this link back to the mobile app.
+5. Frontend - Closing the Loop:
+The mobile app receives the "Add to Google Wallet" link and displays it to the user as a button.
+The user clicks it, and the pass is seamlessly added to their Google Wallet.
+Result of Phase 1: A working app that digitizes a receipt into a Google Wallet pass. This is your core value proposition.
+Phase 2: Data Persistence & Basic Spending Analysis
+The goal is to store the data so you can analyze it later.
+1. Data Storage:
+What to build: A Firestore database.
+Tech Stack Focus: Firestore.
+Action: Modify your Phase 1 Cloud Function. After receiving the JSON from Gemini, but before creating the Wallet Pass, save the entire structured JSON object to a Firestore collection (e.g., receipts). Add the userId to each document to keep data separate for each user.
+2. Item Categorization (AI Enhancement):
+What to build: A second Gemini call within your Cloud Function.
+Action: For each line_item extracted, make another call to a Gemini text model.
+Prompt Example:
+Generated prompt
+Given the item description: '[item description]', categorize it into one of the following: 'Groceries', 'Electronics', 'Clothing', 'Restaurants', 'Subscriptions', 'Utilities', 'General Merchandise'. Respond with only the category name.
+Use code with caution.
+Prompt
+Save this category back into your Firestore document for that item.
+3. Backend API for Analysis:
+What to build: A new Cloud Function (e.g., getSpendingAnalysis).
+Action: This function takes parameters like userId, category, and time_period (e.g., "last_month"). It queries your Firestore database, aggregates the totals, and returns a simple JSON response (e.g., {"category": "Groceries", "total_spent": 154.21}).
+Result of Phase 2: You now have a historical record of all purchases, categorized, and can answer simple questions like "How much did I spend on groceries last month?".
+Phase 3: Building the "Raseed" Conversational Agent
+This is where you bring the "assistant" to life.
+1. Configure Vertex AI Agent Builder:
+What to build: An Agent in Vertex AI Agent Builder.
+Action:
+Define the agent's persona and goals (e.g., "You are Raseed, a friendly financial assistant...").
+Define Tools: This is the most important part. A "tool" is a capability you give the agent. You will create tools that map to the backend APIs you built in Phase 2.
+Tool 1: getSpendingByCategory - Connects to your getSpendingAnalysis Cloud Function.
+Tool 2: getInventory - A new function you'll build that queries Firestore for recently purchased items (e.g., "tomatoes", "laundry detergent").
+Tool 3: createShoppingListPass - A new function that takes a list of items, creates a Google Wallet pass with them listed as a checklist, and returns the "Add to Wallet" link.
+2. Integrate Agent into the App:
+What to build: A chat interface in your mobile app.
+Tech Stack Focus: Vertex AI Agent Builder SDK.
+Action: When a user types a message (e.g., "What ingredients do I need for pasta?"), your app sends this text to the Vertex AI Agent.
+The Magic: The Agent's NLU (Natural Language Understanding) will parse the request.
+For "What can I cook?", it might call the getInventory tool.
+For "How much did I spend on food?", it will call the getSpendingByCategory tool.
+For "Create a list for pasta sauce," it will determine the items and call the createShoppingListPass tool. The agent's response will include the link for the new Wallet pass.
+Result of Phase 3: A user can have a conversation with your app, ask questions about their spending, and generate new, useful Wallet passes like shopping lists.
+Phase 4: Proactive Insights & User Experience Polish
+Make the assistant truly smart and proactive.
+1. Proactive Insights Engine:
+What to build: A scheduled Cloud Function (e.g., runs once a day).
+Tech Stack Focus: Cloud Scheduler, Cloud Functions, Gemini.
+Action:
+The function pulls the last month's spending data for a user from Firestore.
+It sends this data to Gemini with a sophisticated prompt:
+Generated prompt
+Analyze this user's spending data for the last 30 days. Identify one key insight. This could be a trend (e.g., spending on 'Restaurants' is up 20%), a new recurring subscription, or an opportunity to save (e.g., 'They buy Brand X coffee every week; Brand Y is cheaper'). Formulate this insight as a short, actionable sentence. Respond in JSON format: {"insight_text": "Your spending on restaurants is trending up this month."}
+Use code with caution.
+Prompt
+2. Dynamic "Insight" Pass:
+What to build: Logic to create and update a specific Wallet pass.
+Action:
+For each user, create a single, long-lived "Financial Insight" pass with a known objectId.
+When the scheduled function generates a new insight, it doesn't create a new pass. Instead, it uses the Google Wallet API's patch or update method to change the text on the existing insight pass for that user.
+3. Push Notifications:
+What to build: Implement notification handling.
+Action: When you patch or update a pass, the Google Wallet API can trigger a push notification to the user's phone, letting them know their insight has been updated. This makes the app feel alive and proactive.
+Result of Phase 4: A polished, intelligent assistant that not only answers questions but also provides unsolicited, valuable financial advice directly to the user's Google Wallet, keeping them engaged.
