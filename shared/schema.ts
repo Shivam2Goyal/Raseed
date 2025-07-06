@@ -67,9 +67,12 @@ export const processReceiptSchema = z.object({
 
 export const extractedReceiptDataSchema = z.object({
   store_name: z.string().nullable(),
-  transaction_date: z.string().nullable(),
+  transaction_date: z.string().nullable().transform(val => 
+    val || new Date().toISOString().split('T')[0] // Default to current date if missing
+  ),
   total_amount: z.number().nullable(),
   tax_amount: z.number().nullable(),
+  subtotal: z.number().nullable(),
   line_items: z.array(z.object({
     description: z.string(),
     quantity: z.number(),

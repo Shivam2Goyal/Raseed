@@ -88,23 +88,40 @@ Spending data: ${JSON.stringify(spendingData)}`;
     }
   }
 
-  // Phase 3: Chat functionality for conversational AI assistant
+  // Phase 3: Chat functionality for conversational AI assistant with Firebase data access
   async processUserQuery(message: string, userContext: any = {}): Promise<string> {
     try {
-      const systemPrompt = `You are Raseed, a friendly financial assistant that helps users manage their spending and receipts. You can:
-1. Answer questions about spending patterns
-2. Provide insights on purchases
-3. Help create shopping lists
-4. Give financial advice
+      // Enhanced system prompt with better financial assistant capabilities
+      const systemPrompt = `You are Raseed, an advanced AI financial assistant specializing in receipt management and spending analysis. Your capabilities include:
 
-User context: ${JSON.stringify(userContext)}
+1. **Receipt Analysis**: Analyze user receipts and spending patterns from their data
+2. **Financial Insights**: Provide actionable insights about spending habits and trends
+3. **Smart Recommendations**: Suggest ways to save money or optimize purchases
+4. **Inventory Tracking**: Help users track what they've bought and what they might need
+5. **Shopping Assistance**: Create smart shopping lists based on purchase history
+6. **Budget Planning**: Help with budgeting and financial planning
 
-Respond in a helpful, conversational manner. Keep responses concise but informative.`;
+IMPORTANT: You have access to the user's real receipt data stored in Firebase. Use this data to provide accurate, personalized responses. When referencing specific purchases, dates, or amounts, use the actual data from their receipts.
+
+User Context and Data: ${JSON.stringify(userContext)}
+
+Guidelines:
+- Be conversational yet professional
+- Provide specific, actionable advice
+- Reference actual purchase data when relevant
+- Ask clarifying questions when needed
+- Suggest concrete next steps
+- Focus on helping users make better financial decisions
+
+Respond helpfully and reference their actual receipt data when answering questions about spending, purchases, or financial habits.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-pro",
         config: {
           systemInstruction: systemPrompt,
+          temperature: 0.7,
+          topP: 0.8,
+          topK: 40,
         },
         contents: message,
       });

@@ -24,10 +24,11 @@ The application follows a modern full-stack architecture with clear separation b
 - **Wallet Integration**: Google Wallet API for pass creation
 
 ### Database Layer
-- **ORM**: Drizzle ORM with PostgreSQL dialect
-- **Database**: PostgreSQL (configured via Neon Database)
+- **Primary Database**: Firebase Firestore for production data storage
+- **Fallback Database**: PostgreSQL with Drizzle ORM for development
 - **Schema**: Type-safe database schema with Zod validation
-- **Storage**: In-memory storage implementation for development (MemStorage class)
+- **Storage**: Dual storage implementation - Firebase Firestore (production) and MemStorage (development/testing)
+- **Real-time Features**: Firebase enables real-time data synchronization across devices
 
 ## Key Components
 
@@ -155,7 +156,13 @@ The application follows a modern full-stack architecture with clear separation b
 - Configured Google Gemini AI API key for receipt processing and chat features
 - Fixed API key configuration in gemini.ts service (GOOGLE_API_KEY)
 - Server properly configured to bind to 0.0.0.0:5000 for Replit compatibility
-- All core features now functional with proper AI integration
+- **MAJOR UPDATE**: Integrated Firebase Firestore as primary database
+- Enhanced Google Wallet passes with deep links and comprehensive receipt details
+- Added context-aware AI assistant with access to complete Firebase data
+- Implemented receipt-specific chat endpoints for wallet pass deep linking
+- Enhanced AI prompts to provide personalized financial insights
+- Added comprehensive user context service for better AI responses
+- Created Firebase setup documentation and configuration examples
 
 ## Changelog
 - July 06, 2025: Complete implementation of phased development roadmap

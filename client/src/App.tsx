@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import Analytics from "@/pages/analytics";
 import Chat from "@/pages/chat";
 import Insights from "@/pages/insights";
+import ReceiptChat from "@/pages/receipt-chat";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/analytics" component={Analytics} />
       <Route path="/chat" component={Chat} />
       <Route path="/insights" component={Insights} />
+      <Route path="/receipt/:id/chat" component={ReceiptChat} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -4,6 +4,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { geminiService } from "./services/gemini";
 import { walletService } from "./services/wallet";
+import { contextService } from "./services/context";
 import { 
   processReceiptSchema, 
   extractedReceiptDataSchema, 
@@ -100,12 +101,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Receipt data incomplete for wallet pass generation" });
       }
 
-      // Generate wallet pass
+      // Generate wallet pass with enhanced data
       const walletPass = await walletService.createReceiptPass({
         storeName: receipt.storeName,
         transactionDate: receipt.transactionDate || new Date().toISOString().split('T')[0],
         totalAmount: receipt.totalAmount,
-        lineItems: (receipt.lineItems as any[]) || []
+        taxAmount: receipt.taxAmount,
+        subtotal: receipt.subtotal,
+        receiptId: receipt.id,
+        lineItems: (receipt.lineItems as any[]) || [],
+        deepLinkUrl: `${process.env.APP_URL || 'https://raseed.app'}/receipt/${receipt.id}/chat`
       });
 
       // Update receipt with wallet pass info
@@ -195,15 +200,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { message, userId } = chatMessageSchema.parse(req.body);
       
-      // Get user context for better responses
-      const userReceipts = await storage.getAllReceipts();
-      const userSpending = await storage.getSpendingCategories(userId);
-      
-      const userContext = {
-        totalReceipts: userReceipts.length,
-        recentSpending: userSpending.slice(-10),
-        categories: [...new Set(userSpending.map(s => s.category))]
-      };
+      // Get comprehensive user context from Firebase for better AI responses
+      const userContext = userId 
+        ? await contextService.getUserContext(userId)
+        : { userId: null, summary: { totalReceipts: 0 } };
 
       const response = await geminiService.processUserQuery(message, userContext);
 
@@ -216,6 +216,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error processing chat message:", error);
       res.status(500).json({ 
         error: "Failed to process chat message",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Receipt-specific chat endpoint for deep linking from wallet passes
+  app.post("/api/receipts/:id/chat", async (req, res) => {
+    try {
+      const receiptId = parseInt(req.params.id);
+      const { message, userId } = chatMessageSchema.parse(req.body);
+      
+      // Get specific receipt context for AI chat
+      const receiptContext = await contextService.getReceiptContext(receiptId, userId);
+      
+      if (receiptContext.error) {
+        return res.status(404).json({ error: receiptContext.error });
+      }
+      
+      // Enhanced prompt for receipt-specific conversations
+      const contextualMessage = `I'm looking at my receipt from ${receiptContext.receipt.storeName} on ${receiptContext.receipt.transactionDate}. ${message}`;
+      
+      const response = await geminiService.processUserQuery(contextualMessage, receiptContext);
+
+      res.json({
+        success: true,
+        response,
+        receiptInfo: {
+          id: receiptContext.receipt.id,
+          storeName: receiptContext.receipt.storeName,
+          date: receiptContext.receipt.transactionDate,
+          total: receiptContext.receipt.totalAmount
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error processing receipt chat:", error);
+      res.status(500).json({ 
+        error: "Failed to process receipt chat",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }
