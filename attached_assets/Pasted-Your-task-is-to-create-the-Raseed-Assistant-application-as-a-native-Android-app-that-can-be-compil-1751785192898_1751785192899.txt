@@ -1,0 +1,60 @@
+Your task is to create the "Raseed Assistant" application as a native Android app that can be compiled into an .apk file.
+
+Platform: Native Android.
+Programming Language & Framework: Please build this application using Kotlin and Jetpack Compose for the UI. This is the modern, recommended stack for native Android development.
+Raseed Assistant is an intelligent, AI-powered personal finance application designed to make expense tracking effortless and insightful. It acts as a digital receipt manager and a financial assistant, helping users understand their spending habits by simply taking pictures of their receipts. The app should be built with a clean, modern, and mobile-first interface following Material Design guidelines.
+
+1. Dashboard (The Main Screen)
+
+Purpose: To give the user an at-a-glance summary of their financial activity for the current period (e.g., this month).
+Key Components:
+Overview Cards: Four prominent cards at the top displaying:
+Total amount spent.
+Total number of transactions.
+The top spending category (e.g., "Shopping").
+Average daily spending.
+Spending by Category Chart: A vertical bar chart that visually breaks down spending across different categories like Groceries, Dining, Shopping, etc.
+Recent Expenses List: A list of the most recent transactions. Each item in the list should show the store name, category (as a chip/badge), and the total amount.
+2. Adding a New Expense
+
+Purpose: To log a new expense. This should be a primary action, likely accessible via a Floating Action Button (FAB) on the dashboard. This will open a new screen with two tabs.
+Tab 1: Manual Entry
+A simple form with fields for Store Name, Total Amount, Category (a dropdown/selector), and Transaction Date (a native date picker).
+Tab 2: Scan Receipt (AI-Powered)
+Input: The user should be able to either select an image from their phone's gallery or launch the phone's camera directly from the app to capture a photo of a receipt.
+AI Analysis: After an image is provided, the app will make an API call to a backend service to analyze the receipt. The AI will extract:
+Store Name
+Transaction Date
+Total Amount
+Tax Amount (e.g., GST/VAT)
+A suggested Category (from a predefined list: 'Groceries', 'Dining', 'Transport', 'Shopping', 'Utilities', 'Other').
+Itemized List: A detailed list of every single item purchased, including its description and price.
+Review & Confirmation: The extracted data is presented to the user on a new screen for review. The user can then:
+Click "Confirm and Add Expense" to save the transaction locally on the device.
+Click a button to simulate "Add to Google Wallet" (this can just show a success message for now).
+3. Viewing Expense Details
+
+Purpose: To allow users to inspect a specific transaction.
+Flow: From the "Recent Expenses" list on the Dashboard, tapping on any transaction should navigate to a new detail screen.
+Functionality: This screen will display:
+The store name and date.
+A scrollable list showing the itemized breakdown of the receipt (item description and price).
+The final tax and total amounts.
+4. AI Assistant (Chatbot)
+
+Purpose: To provide a conversational way for users to ask questions about their spending.
+Interface: A standard chat interface with a text input field at the bottom and a scrollable view of the conversation history.
+Functionality:
+When the user sends a message, the app makes an API call to the backend with the user's query.
+The backend's response is then displayed as a new message in the chat.
+Show some pre-defined question buttons to help the user get started.
+Use a Bottom Navigation Bar for the three primary sections: Dashboard, Add Expense, and Assistant. The "Add Expense" tab might be the central item. This is a standard and intuitive pattern for native Android apps.
+An Expense object should contain:
+
+id: A unique string.
+storeName: String.
+amount: Double/Float (the total transaction amount).
+date: String or Date object.
+category: String (from the predefined list).
+tax: Double/Float (optional).
+lineItems: A list of objects (optional), where each object has description (String) and price (Double/Float).
