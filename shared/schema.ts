@@ -72,12 +72,23 @@ export const extractedReceiptDataSchema = z.object({
   ),
   total_amount: z.number().nullable(),
   tax_amount: z.number().nullable(),
-  subtotal: z.number().nullable(),
+  subtotal: z.number().nullable().optional(),
   line_items: z.array(z.object({
     description: z.string(),
     quantity: z.number(),
     price: z.number(),
   })).default([]),
+}).transform(data => {
+  // Calculate subtotal if not provided
+  if (data.subtotal === undefined || data.subtotal === null) {
+    if (data.total_amount !== null && data.tax_amount !== null) {
+      data.subtotal = data.total_amount - data.tax_amount;
+    } else if (data.line_items && data.line_items.length > 0) {
+      // Calculate from line items
+      data.subtotal = data.line_items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+  }
+  return data;
 });
 
 export type InsertReceipt = z.infer<typeof insertReceiptSchema>;

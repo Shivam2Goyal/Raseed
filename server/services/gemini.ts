@@ -141,6 +141,7 @@ Analyze this receipt image and extract the following information in a structured
 - transaction_date: string (in YYYY-MM-DD format, if not found use null)
 - total_amount: number (the final total amount paid, as a number)
 - tax_amount: number (the tax amount, as a number, if not found use null)
+- subtotal: number (amount before tax, if shown on receipt, otherwise calculate as total_amount - tax_amount)
 - line_items: array of objects, where each object has:
   - description: string (item name/description)
   - quantity: number (quantity purchased)
@@ -175,6 +176,7 @@ Important guidelines:
               transaction_date: { type: "string" },
               total_amount: { type: "number" },
               tax_amount: { type: "number" },
+              subtotal: { type: "number" },
               line_items: {
                 type: "array",
                 items: {
@@ -188,7 +190,7 @@ Important guidelines:
                 },
               },
             },
-            required: ["store_name", "transaction_date", "total_amount", "tax_amount", "line_items"],
+            required: ["store_name", "transaction_date", "total_amount", "tax_amount", "subtotal", "line_items"],
           },
         },
         contents: contents,
